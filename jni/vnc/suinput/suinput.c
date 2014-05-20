@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <linux/uinput.h>
 #include <stdio.h>
 #include "suinput.h"
+#include <sys/ioctl.h>
+#include <linux/fb.h>
 
 char* UINPUT_FILEPATHS[] = {
     "/android/dev/uinput",
@@ -125,6 +127,28 @@ int suinput_open(const char* device_name, const struct input_id* id)
     user_dev.id.vendor = id->vendor;
     user_dev.id.product = id->product;
     user_dev.id.version = id->version;
+
+    /* Figure out the screen dimensions */
+    // TODO: list out all framebuffers under /dev/graphics and use info from one whose screen ration is most reasonable
+    //  - list all files under /dev/graphics
+    //  - iterate over them
+    struct fb_var_screeninfo fb_var;
+    L("opening /dev/graphics/fb0 for reading screen dimensions\n");
+    int fd = open("/dev/graphics/fb0", O_RDONLY);
+    ioctl(fd, FBIOGET_VSCREENINFO, &fb_var);
+    close(fd);
+    L("xres is %d\n", fb_var.xres);
+    L("yres is %d\n", fb_var.yres);
+    L("xres_virtual is %d\n", fb_var.xres_virtual);
+    L("yres_virtual is %d\n", fb_var.yres_virtual);
+    L("opening /dev/graphics/fb1 for reading screen dimensions\n");
+    fd = open("/dev/graphics/fb1", O_RDONLY);
+    ioctl(fd, FBIOGET_VSCREENINFO, &fb_var);
+    close(fd);
+    L("xres is %d\n", fb_var.xres);
+    L("yres is %d\n", fb_var.yres);
+    L("xres_virtual is %d\n", fb_var.xres_virtual);
+    L("yres_virtual is %d\n", fb_var.yres_virtual);
 
     user_dev.absmin[ABS_X] = 0;
     user_dev.absmax[ABS_X] = 1080;
